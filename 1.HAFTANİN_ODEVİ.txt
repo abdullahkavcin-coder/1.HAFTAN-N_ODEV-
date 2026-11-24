@@ -1,0 +1,190 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace AkilliEvSistemi
+{
+    public enum CihazTuru
+    {
+        Lamba,
+        Klima,
+        GuvenlikSistemi
+    }
+
+    public class Cihaz
+    {
+        public string Kimlik { get; }
+        public string Ad { get; set; }
+        public CihazTuru Tur { get; set; }
+        public bool AcikMi { get; private set; }
+
+        public Cihaz(string kimlik, string ad, CihazTuru tur)
+        {
+            Kimlik = kimlik;
+            Ad = ad;
+            Tur = tur;
+            AcikMi = false; // Yeni oluşturulan cihaz başlangıçta kapalıdır
+        }
+
+        public void Ac()
+        {
+            AcikMi = true;
+            Console.WriteLine($"'{Ad}' ({Kimlik}) açıldı.");
+        }
+
+        public void Kapat()
+        {
+            AcikMi = false;
+            Console.WriteLine($"'{Ad}' ({Kimlik}) kapatıldı.");
+        }
+
+        public void BilgileriGoster()
+        {
+            string durum = AcikMi ? "Açık" : "Kapalı";
+            Console.WriteLine($"Kimlik: {Kimlik} | Ad: {Ad} | Tür: {Tur} | Durum: {durum}");
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            List<Cihaz> cihazlar = new List<Cihaz>
+            {
+                new Cihaz("C01", "Salon Lambası", CihazTuru.Lamba),
+                new Cihaz("C02", "Yatak Odası Kliması", CihazTuru.Klima),
+                new Cihaz("C03", "Ana Kapı Alarmı", CihazTuru.GuvenlikSistemi)
+            };
+
+            while (true)
+            {
+                Console.WriteLine("\n--- AKILLI CİHAZ YÖNETİM MENÜSÜ ---");
+                Console.WriteLine("1. Cihazları Listele");
+                Console.WriteLine("2. Yeni Cihaz Ekle");
+                Console.WriteLine("3. Cihaz Aç");
+                Console.WriteLine("4. Cihaz Kapat");
+                Console.WriteLine("0. Çıkış");
+                Console.Write("Seçiminiz: ");
+
+                string secim = Console.ReadLine()?.Trim() ?? "";
+                Console.WriteLine();
+
+                switch (secim)
+                {
+                    case "1":
+                        CihazlariListele(cihazlar);
+                        break;
+                    case "2":
+                        YeniCihazEkle(cihazlar);
+                        break;
+                    case "3":
+                        CihazDurumDegistir(cihazlar, true);
+                        break;
+                    case "4":
+                        CihazDurumDegistir(cihazlar, false);
+                        break;
+                    case "0":
+                        Console.WriteLine("Programdan çıkılıyor...");
+                        return;
+                    default:
+                        Console.WriteLine("Hata: Geçersiz menü seçimi.");
+                        break;
+                }
+            }
+        }
+
+        static void CihazlariListele(List<Cihaz> cihazlar)
+        {
+            if (cihazlar.Count == 0)
+            {
+                Console.WriteLine("Sistemde kayıtlı cihaz bulunmamaktadır.");
+                return;
+            }
+
+            Console.WriteLine("=== Kayıtlı Cihazlar ===");
+            foreach (var cihaz in cihazlar)
+            {
+                cihaz.BilgileriGoster();
+            }
+        }
+
+        static void YeniCihazEkle(List<Cihaz> cihazlar)
+        {
+            Console.Write("Cihaz Kimliği: ");
+            string kimlik = Console.ReadLine()?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(kimlik))
+            {
+                Console.WriteLine("Hata: Kimlik alanı boş bırakılamaz.");
+                return;
+            }
+
+            bool kimlikVarMi = cihazlar.Any(c => c.Kimlik.Equals(kimlik, StringComparison.OrdinalIgnoreCase));
+            if (kimlikVarMi)
+            {
+                Console.WriteLine($"Hata: '{kimlik}' kimliğine sahip bir cihaz zaten mevcut.");
+                return;
+            }
+
+            Console.Write("Cihaz Adı: ");
+            string ad = Console.ReadLine()?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(ad))
+            {
+                Console.WriteLine("Hata: Cihaz adı boş bırakılamaz.");
+                return;
+            }
+
+            Console.WriteLine("Cihaz Türü Seçiniz:");
+            Console.WriteLine("1 - Lamba");
+            Console.WriteLine("2 - Klima");
+            Console.WriteLine("3 - GuvenlikSistemi");
+            Console.Write("Seçim (1-3): ");
+
+            string turSecim = Console.ReadLine()?.Trim() ?? "";
+            CihazTuru tur;
+
+            switch (turSecim)
+            {
+                case "1":
+                    tur = CihazTuru.Lamba;
+                    break;
+                case "2":
+                    tur = CihazTuru.Klima;
+                    break;
+                case "3":
+                    tur = CihazTuru.GuvenlikSistemi;
+                    break;
+                default:
+                    Console.WriteLine("Hata: Geçersiz cihaz türü seçimi. Cihaz eklenemedi.");
+                    return;
+            }
+
+            Cihaz yeniCihaz = new Cihaz(kimlik, ad, tur);
+            cihazlar.Add(yeniCihaz);
+            Console.WriteLine("Yeni cihaz başarıyla eklendi (varsayılan durum: Kapalı).");
+        }
+
+        static void CihazDurumDegistir(List<Cihaz> cihazlar, bool ac)
+        {
+            Console.Write("İşlem yapılacak Cihaz Kimliği: ");
+            string kimlik = Console.ReadLine()?.Trim() ?? "";
+
+            Cihaz? cihaz = cihazlar.FirstOrDefault(c => c.Kimlik.Equals(kimlik, StringComparison.OrdinalIgnoreCase));
+            if (cihaz == null)
+            {
+                Console.WriteLine($"Hata: '{kimlik}' kimliğine sahip bir cihaz bulunamadı.");
+                return;
+            }
+
+            if (ac)
+            {
+                cihaz.Ac();
+            }
+            else
+            {
+                cihaz.Kapat();
+            }
+        }
+    }
+}
